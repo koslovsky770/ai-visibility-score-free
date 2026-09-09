@@ -103,6 +103,7 @@ async function fetchAndParseHomepage(url: string, siteHostname: string): Promise
     h2: [],
     h3: [],
     bodyText: "",
+    mainText: "",
     wordCount: 0,
     paragraphCount: 0,
     internalLinks: [],
@@ -134,9 +135,19 @@ async function fetchAndParseHomepage(url: string, siteHostname: string): Promise
       }
     });
 
+    // bodyText keeps nav/footer text — the rule engine's phone/email regex
+    // checks (contact details, NAP-vs-schema consistency) rely on exactly
+    // that content, since footers are where businesses often put it.
     const content = $.root().clone();
     content.find("script, style, noscript, svg").remove();
     const bodyText = content.text().replace(/\s+/g, " ").trim();
+
+    // mainText additionally drops nav/footer/header — used only for the LLM
+    // prompt, to avoid paying to send repeated boilerplate/menu text.
+    const mainContent = $.root().clone();
+    mainContent.find("script, style, noscript, svg, nav, footer, header").remove();
+    const mainText = mainContent.text().replace(/\s+/g, " ").trim();
+
     const paragraphCount = $("p").filter((_, el) => $(el).text().trim().length > 0).length;
 
     const internalLinks: { href: string; text: string }[] = [];
@@ -184,6 +195,7 @@ async function fetchAndParseHomepage(url: string, siteHostname: string): Promise
       h2: $("h2").map((_, el) => $(el).text().trim()).get().filter(Boolean),
       h3: $("h3").map((_, el) => $(el).text().trim()).get().filter(Boolean),
       bodyText,
+      mainText,
       wordCount: bodyText.split(/\s+/).filter(Boolean).length,
       paragraphCount,
       internalLinks,
@@ -311,6 +323,7 @@ function emptyPage(url: string): PageSnapshot {
     h2: [],
     h3: [],
     bodyText: "",
+    mainText: "",
     wordCount: 0,
     paragraphCount: 0,
     internalLinks: [],

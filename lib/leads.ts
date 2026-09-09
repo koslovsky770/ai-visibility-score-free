@@ -5,6 +5,9 @@ import type { Lead } from "./types";
 export interface StoredLead extends Lead {
   score: number;
   createdAt: string;
+  /** From lib/costLog.ts — 0 when served from cache. */
+  estimatedCostUsd?: number;
+  cached?: boolean;
 }
 
 /**

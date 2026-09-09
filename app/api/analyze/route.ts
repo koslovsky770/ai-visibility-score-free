@@ -1,11 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
 import { buildHomepageSnapshot } from "@/lib/homepageCrawler";
 import { runFreeRuleEngine } from "@/lib/freeRuleEngine";
-import { runFreeLlmAnalysis } from "@/lib/freeLlmAnalysis";
+import { runFreeLlmAnalysis, FREE_LLM_MODEL } from "@/lib/freeLlmAnalysis";
 import { aggregateFreeReport } from "@/lib/freeAggregator";
 import { saveLead } from "@/lib/leads";
+import { logCost } from "@/lib/costLog";
+import {
+  checkEmailQuota,
+  checkDomainQuota,
+  checkIpQuota,
+  getCachedReport,
+  setCachedReport,
+} from "@/lib/rateLimitAndCache";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function getClientIp(req: NextRequest): string {
+  const forwarded = req.headers.get("x-forwarded-for");
+  if (forwarded) return forwarded.split(",")[0].trim();
+  return req.headers.get("x-real-ip") ?? "unknown";
+}
 
 export async function POST(req: NextRequest) {
   let body: unknown;
@@ -28,6 +42,41 @@ export async function POST(req: NextRequest) {
   }
   if (!EMAIL_RE.test(email)) {
     return NextResponse.json({ error: "כתובת האימייל שהוזנה אינה תקינה." }, { status: 400 });
+  }
+
+  // Server-side usage limits — must run before any expensive work, and
+  // can't be bypassed from the client. See lib/rateLimitAndCache.ts.
+  const ip = getClientIp(req);
+  const ipQuota = await checkIpQuota(ip);
+  if (!ipQuota.allowed) {
+    return NextResponse.json({ error: ipQuota.message }, { status: 429 });
+  }
+  const emailQuota = await checkEmailQuota(email);
+  if (!emailQuota.allowed) {
+    return NextResponse.json({ error: emailQuota.message }, { status: 429 });
+  }
+  const domainQuota = await checkDomainQuota(url);
+  if (!domainQuota.allowed) {
+    return NextResponse.json({ error: domainQuota.message }, { status: 429 });
+  }
+
+  const cached = await getCachedReport(url);
+  if (cached) {
+    const report = { ...cached, business: { name: businessName, field, region } };
+    logCost({ url, model: FREE_LLM_MODEL, usage: null, cached: true });
+    await saveLead({
+      name,
+      email,
+      url,
+      businessName,
+      field,
+      region,
+      score: report.totalScore,
+      createdAt: new Date().toISOString(),
+      cached: true,
+      estimatedCostUsd: 0,
+    });
+    return NextResponse.json({ report });
   }
 
   let snapshot;
@@ -53,10 +102,12 @@ export async function POST(req: NextRequest) {
 
   let llmResults;
   let businessSnapshot;
+  let usage;
   try {
     const llm = await runFreeLlmAnalysis(snapshot);
     llmResults = llm.criteria;
     businessSnapshot = llm.businessSnapshot;
+    usage = llm.usage;
   } catch (err) {
     console.error("LLM analysis failed", err);
     return NextResponse.json(
@@ -69,7 +120,9 @@ export async function POST(req: NextRequest) {
   }
 
   const report = aggregateFreeReport(snapshot, ruleResults, llmResults, businessSnapshot);
+  const estimatedCostUsd = logCost({ url, model: FREE_LLM_MODEL, usage, cached: false });
 
+  await setCachedReport(url, report);
   await saveLead({
     name,
     email,
@@ -79,6 +132,8 @@ export async function POST(req: NextRequest) {
     region,
     score: report.totalScore,
     createdAt: new Date().toISOString(),
+    cached: false,
+    estimatedCostUsd,
   });
 
   return NextResponse.json({ report });

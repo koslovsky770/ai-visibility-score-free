@@ -62,7 +62,7 @@ function condenseHomepageForPrompt(snapshot: HomepageSnapshot) {
       h2: p.h2.slice(0, 15),
       h3: p.h3.slice(0, 15),
       wordCount: p.wordCount,
-      bodyTextExcerpt: p.bodyText.slice(0, MAX_PAGE_TEXT_CHARS),
+      bodyTextExcerpt: p.mainText.slice(0, MAX_PAGE_TEXT_CHARS),
       schemaTypesFound: p.jsonLd.map((b) => (b as Record<string, unknown>)?.["@type"]).filter(Boolean),
     },
     siteMapFoundOnHomepage: Object.fromEntries(
@@ -74,9 +74,16 @@ function condenseHomepageForPrompt(snapshot: HomepageSnapshot) {
   };
 }
 
+export const FREE_LLM_MODEL = "claude-sonnet-5";
+
+export interface FreeLlmUsage {
+  inputTokens: number;
+  outputTokens: number;
+}
+
 export async function runFreeLlmAnalysis(
   snapshot: HomepageSnapshot,
-): Promise<{ criteria: CriterionResult[]; businessSnapshot: BusinessSnapshot }> {
+): Promise<{ criteria: CriterionResult[]; businessSnapshot: BusinessSnapshot; usage: FreeLlmUsage }> {
   const criteriaForPrompt = llmFreeCriteria().map((c) => ({
     id: c.id,
     category: c.category,
@@ -96,12 +103,12 @@ export async function runFreeLlmAnalysis(
   );
 
   const response = await client.messages.parse({
-    model: "claude-opus-5",
+    model: FREE_LLM_MODEL,
     max_tokens: 6000,
     system: SYSTEM_PROMPT,
     messages: [{ role: "user", content: userContent }],
     output_config: {
-      effort: "high",
+      effort: "medium",
       format: zodOutputFormat(FreeLLMOutputSchema),
     },
   });
@@ -118,5 +125,12 @@ export async function runFreeLlmAnalysis(
     sourceType: "content_analysis" as const,
   }));
 
-  return { criteria: criteriaResults, businessSnapshot: parsed.businessSnapshot };
+  return {
+    criteria: criteriaResults,
+    businessSnapshot: parsed.businessSnapshot,
+    usage: {
+      inputTokens: response.usage.input_tokens,
+      outputTokens: response.usage.output_tokens,
+    },
+  };
 }

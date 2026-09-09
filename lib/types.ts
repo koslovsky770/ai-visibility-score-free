@@ -22,6 +22,8 @@ export interface PageSnapshot {
   h2: string[];
   h3: string[];
   bodyText: string;
+  /** Same as bodyText but with nav/footer/header stripped — used for the LLM prompt only. */
+  mainText: string;
   wordCount: number;
   paragraphCount: number;
   internalLinks: { href: string; text: string }[];
