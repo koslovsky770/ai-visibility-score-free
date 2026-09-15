@@ -19,17 +19,21 @@ let redisClient: Redis | null | undefined;
 /**
  * Rate limiting and result caching both need state shared across Vercel's
  * isolated function instances — in-memory storage would not work. All of
- * this is a no-op (requests always allowed, cache always misses) until
- * UPSTASH_REDIS_REST_URL / UPSTASH_REDIS_REST_TOKEN are configured (connect
- * "Upstash for Redis" from the Vercel project's Storage tab). This keeps
- * local dev and any deploy without Redis working, just unprotected.
+ * this is a no-op (requests always allowed, cache always misses) until Redis
+ * is configured (connect "Upstash for Redis" from the Vercel project's
+ * Storage tab). This keeps local dev and any deploy without Redis working,
+ * just unprotected.
+ *
+ * Vercel's Marketplace integration for Upstash injects KV_REST_API_URL /
+ * KV_REST_API_TOKEN (its own "KV" naming), not the UPSTASH_REDIS_REST_* names
+ * from Upstash's own docs — support both so either connection method works.
  */
 function getRedis(): Redis | null {
   if (redisClient !== undefined) return redisClient;
-  const url = process.env.UPSTASH_REDIS_REST_URL;
-  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+  const url = process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL;
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN;
   if (!url || !token) {
-    console.warn("UPSTASH_REDIS_REST_URL/TOKEN not set — rate limiting and result caching are disabled.");
+    console.warn("Redis env vars not set — rate limiting and result caching are disabled.");
     redisClient = null;
     return null;
   }
