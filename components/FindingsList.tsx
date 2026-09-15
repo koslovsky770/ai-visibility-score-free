@@ -7,9 +7,9 @@ function List({
 }: {
   items: EnrichedCriterionResult[];
   emptyText: string;
-  tone: "positive" | "negative";
+  tone: "positive" | "partial" | "negative";
 }) {
-  const dot = tone === "positive" ? "bg-emerald-500" : "bg-rose-500";
+  const dot = tone === "positive" ? "bg-emerald-500" : tone === "partial" ? "bg-amber-500" : "bg-rose-500";
   if (items.length === 0) {
     return <p className="text-sm text-slate-400">{emptyText}</p>;
   }
@@ -35,15 +35,22 @@ export default function FindingsList({
   whatWorks: EnrichedCriterionResult[];
   whatIsMissing: EnrichedCriterionResult[];
 }) {
+  const partial = whatIsMissing.filter((c) => c.status === "partial");
+  const missing = whatIsMissing.filter((c) => c.status === "missing");
+
   return (
-    <div className="grid gap-6 sm:grid-cols-2">
+    <div className="grid gap-6 sm:grid-cols-3">
       <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-        <h3 className="mb-4 font-bold text-emerald-700">מה כבר עובד טוב</h3>
+        <h3 className="mb-4 font-bold text-emerald-700">✅ מה ברור</h3>
         <List items={whatWorks} emptyText="לא נמצאו עדיין נקודות חוזק בולטות." tone="positive" />
       </div>
       <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-        <h3 className="mb-4 font-bold text-rose-700">מה חסר</h3>
-        <List items={whatIsMissing} emptyText="לא נמצאו פערים משמעותיים." tone="negative" />
+        <h3 className="mb-4 font-bold text-amber-700">⚠️ מה חלקי</h3>
+        <List items={partial} emptyText="אין ממצאים חלקיים בולטים." tone="partial" />
+      </div>
+      <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+        <h3 className="mb-4 font-bold text-rose-700">❌ מה חסר</h3>
+        <List items={missing} emptyText="לא נמצאו פערים משמעותיים." tone="negative" />
       </div>
     </div>
   );

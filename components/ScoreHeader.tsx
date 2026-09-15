@@ -1,5 +1,5 @@
 import type { FreeAnalysisReport } from "@/lib/types";
-import { scoreColor } from "@/lib/displayHelpers";
+import { scoreColor, scoreSummarySentence } from "@/lib/displayHelpers";
 
 export default function ScoreHeader({ report }: { report: FreeAnalysisReport }) {
   const ratio = report.totalScore / 100;
@@ -7,10 +7,11 @@ export default function ScoreHeader({ report }: { report: FreeAnalysisReport }) 
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-6 sm:p-10 text-center shadow-sm">
       <p className="text-sm font-medium text-slate-500">
-        {report.business.name} · {report.analyzedUrl}
+        {report.business.name ? `${report.business.name} · ` : ""}
+        {report.analyzedUrl}
       </p>
 
-      <p className="mt-6 text-sm text-slate-500">ציון דף הבית שלך</p>
+      <p className="mt-6 text-sm text-slate-500">ציון ההתאמה של דף הבית ל-AI</p>
       <div className={`mt-1 text-7xl sm:text-8xl font-extrabold ${scoreColor(ratio)}`}>
         {report.totalScore}
         <span className="text-3xl sm:text-4xl text-slate-400 font-semibold">/100</span>
@@ -19,7 +20,11 @@ export default function ScoreHeader({ report }: { report: FreeAnalysisReport }) 
       <p className="mt-4 text-xl sm:text-2xl font-bold text-slate-800">{report.tier.label}</p>
       <p className="text-sm text-slate-400">טווח {report.tier.range}</p>
 
-      <p className="mx-auto mt-6 max-w-xl text-sm leading-relaxed text-slate-500">
+      <p className="mx-auto mt-4 max-w-xl text-base font-medium text-slate-700">
+        {scoreSummarySentence(report.totalScore)}
+      </p>
+
+      <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-slate-500">
         זהו <span className="font-semibold">ציון דף הבית בלבד</span> — כשער הכניסה לאתר שלך — ולא
         ציון של האתר כולו. הוא משקף בהירות, מבנה ואיתותי אמון לפי קריטריונים מוגדרים, והוא{" "}
         <span className="font-semibold">אינו</span> מבטיח הופעה בתשובות של ChatGPT, Gemini,

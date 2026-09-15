@@ -110,6 +110,7 @@ export interface Lead {
   businessName: string;
   field: string;
   region: string;
+  marketingConsent?: boolean;
 }
 
 export interface DiscoveredLinkMap {

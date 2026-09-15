@@ -27,3 +27,13 @@ export function scoreColor(ratio: number): string {
   if (ratio >= 0.4) return "text-amber-600";
   return "text-rose-600";
 }
+
+export function scoreSummarySentence(score: number): string {
+  if (score >= 75) {
+    return "האתר נותן ל-AI תמונה ברורה וכמעט מלאה של העסק, עם מעט מאוד פערים לטיפול.";
+  }
+  if (score >= 40) {
+    return "האתר נותן ל-AI חלק מהמידע שהוא צריך כדי להבין את העסק, אבל נמצאו פערים שכדאי לטפל בהם.";
+  }
+  return "האתר עדיין לא נותן ל-AI מספיק מידע ברור כדי להבין היטב את העסק — נמצאו פערים משמעותיים לטיפול.";
+}

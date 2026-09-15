@@ -1,22 +1,23 @@
 import type { Metadata } from "next";
-import { Heebo } from "next/font/google";
+import { Assistant } from "next/font/google";
 import "./globals.css";
 
-const heebo = Heebo({
-  variable: "--font-heebo",
+const assistant = Assistant({
+  variable: "--font-assistant",
   subsets: ["hebrew", "latin"],
+  weight: ["400", "500", "700", "800"],
 });
 
 export const metadata: Metadata = {
-  title: "בדיקת AI חינמית לדף הבית — AI Visibility Score",
+  title: "האם ה-AI מבין את העסק שלך? — בדיקה חינמית | AI Visibility Score",
   description:
-    "בדיקה חינמית שבודקת עד כמה דף הבית שלך ממלא את תפקידו כשער כניסה להבנת העסק, למנועי חיפוש ומנועי AI.",
+    "בדיקה חינמית של דף הבית שלך: עד כמה הוא מסביר ל-ChatGPT, Gemini ומנועי AI אחרים מי אתם, מה אתם מציעים ולמי.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html dir="rtl" lang="he" className={`${heebo.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col bg-slate-50 text-slate-900">
+    <html dir="rtl" lang="he" className={`${assistant.variable} h-full antialiased`}>
+      <body className="min-h-full flex flex-col text-slate-900">
         {children}
       </body>
     </html>

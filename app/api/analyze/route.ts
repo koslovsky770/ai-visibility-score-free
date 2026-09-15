@@ -36,9 +36,15 @@ export async function POST(req: NextRequest) {
   const businessName = typeof b.businessName === "string" ? b.businessName.trim() : "";
   const field = typeof b.field === "string" ? b.field.trim() : "";
   const region = typeof b.region === "string" ? b.region.trim() : "";
+  const marketingConsent = b.marketingConsent === true;
 
-  if (!name || !email || !url || !businessName) {
-    return NextResponse.json({ error: "יש להזין שם, אימייל, כתובת אתר ושם עסק." }, { status: 400 });
+  // businessName/field are no longer collected upfront in the UI — the
+  // point of the free check is to see whether the homepage itself explains
+  // the business, not to ask the user to explain it first. They stay
+  // optional here and, when blank, the report simply won't show a
+  // business name/field (the AI-derived businessSnapshot is unaffected).
+  if (!name || !email || !url) {
+    return NextResponse.json({ error: "יש להזין שם, אימייל וכתובת אתר." }, { status: 400 });
   }
   if (!EMAIL_RE.test(email)) {
     return NextResponse.json({ error: "כתובת האימייל שהוזנה אינה תקינה." }, { status: 400 });
@@ -75,6 +81,7 @@ export async function POST(req: NextRequest) {
       createdAt: new Date().toISOString(),
       cached: true,
       estimatedCostUsd: 0,
+      marketingConsent,
     });
     return NextResponse.json({ report });
   }
@@ -134,6 +141,7 @@ export async function POST(req: NextRequest) {
     createdAt: new Date().toISOString(),
     cached: false,
     estimatedCostUsd,
+    marketingConsent,
   });
 
   return NextResponse.json({ report });
