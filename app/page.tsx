@@ -176,7 +176,7 @@ export default function Home() {
                 onChange={(e) => setConsent(e.target.checked)}
                 className="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
               />
-              <span>אשמח לקבל גם טיפים ועדכונים על נראות AI (אופציונלי, ניתן להסיר בכל עת)</span>
+              <span>אשמח לקבל גם טיפים ועדכונים על שיווק דיגיטלי לעסקים (ניתן להסיר בכל עת)</span>
             </label>
             <button
               type="submit"

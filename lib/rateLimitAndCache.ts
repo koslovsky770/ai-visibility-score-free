@@ -5,7 +5,9 @@ const EMAIL_LIMIT = 2;
 const EMAIL_WINDOW_SECONDS = 30 * 24 * 60 * 60;
 const DOMAIN_LIMIT = 2;
 const DOMAIN_WINDOW_SECONDS = 30 * 24 * 60 * 60;
-const IP_LIMIT = 5;
+// TEMPORARILY raised from 5 so Odelya can test freely without self-blocking.
+// Revert to 5 once she confirms the app is working correctly end-to-end.
+const IP_LIMIT = 50;
 const IP_WINDOW_SECONDS = 24 * 60 * 60;
 const CACHE_TTL_SECONDS = 48 * 60 * 60;
 
