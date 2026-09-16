@@ -10,8 +10,7 @@ import BusinessSnapshot from "@/components/BusinessSnapshot";
 import SiteMapSummary from "@/components/SiteMapSummary";
 import CategoryCard from "@/components/CategoryCard";
 import FindingsList from "@/components/FindingsList";
-import LimitsNotice from "@/components/LimitsNotice";
-import FullAuditCta from "@/components/FullAuditCta";
+import FullAuditUpsell from "@/components/FullAuditUpsell";
 
 type FormStep = "url" | "contact";
 
@@ -238,8 +237,10 @@ export default function Home() {
 
           <FindingsList whatWorks={view.report.whatWorks} whatIsMissing={view.report.whatIsMissing} />
           <SiteMapSummary siteMap={view.report.siteMap} />
-          <LimitsNotice totalPagesFound={view.report.siteMap.totalPagesFound} />
-          <FullAuditCta onCtaClick={() => track("full_report_cta_clicked")} />
+          <FullAuditUpsell
+            missingCount={view.report.whatIsMissing.length}
+            onCtaClick={() => track("full_report_cta_clicked")}
+          />
 
           <div className="text-center">
             <button type="button" onClick={resetAll} className="text-sm font-medium text-indigo-600 hover:text-indigo-800">
