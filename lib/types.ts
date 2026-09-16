@@ -22,8 +22,12 @@ export interface PageSnapshot {
   h2: string[];
   h3: string[];
   bodyText: string;
-  /** Same as bodyText but with nav/footer/header stripped — used for the LLM prompt only. */
+  /** Same as bodyText but with nav stripped — used for the LLM prompt only. */
   mainText: string;
+  /** Text of the page's <footer> alone (if any) — kept separate so it survives
+   *  mainText being truncated for the LLM prompt; footers commonly carry the
+   *  only address/hours/contact info on the page. */
+  footerText: string;
   wordCount: number;
   paragraphCount: number;
   internalLinks: { href: string; text: string }[];

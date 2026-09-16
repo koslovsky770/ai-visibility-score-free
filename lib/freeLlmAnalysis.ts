@@ -6,6 +6,12 @@ import type { HomepageSnapshot } from "./homepageCrawler";
 import { llmFreeCriteria } from "./freeCriteria";
 
 const MAX_PAGE_TEXT_CHARS = 4000;
+// Footer is sent as its own small, separate excerpt (not relied on within
+// bodyTextExcerpt) — a plain `.slice(0, MAX)` on any homepage with
+// substantial body content silently cuts off the footer before it's ever
+// reached, and that's exactly where address/hours/contact info commonly
+// lives.
+const MAX_FOOTER_TEXT_CHARS = 600;
 
 const StatusEnum = z.enum(["ok", "partial", "missing", "not_applicable", "not_checkable"]);
 
@@ -47,6 +53,7 @@ const SYSTEM_PROMPT = `אתה מנתח מוכנות של **דף הבית בלב�
 4. לעולם אל תעריך או תרמוז האם ChatGPT, Gemini או כל מנוע AI אחר "אוהב" את האתר, ולעולם אל תבטיח הופעה בתשובות של מנועי AI.
 5. explanation לכל קריטריון: לבעל עסק שאינו איש טכנולוגיה. **כשהסטטוס partial או missing, חובה לכלול בתוך אותו משפט גם הסבר קונקרטי איך לתקן** (לא רק לתאר את הבעיה) — למשל: "הכותרת הראשית מציגה מסר שיווקי כללי ולא מבהירה מיד למי השירות מיועד. מומלץ להוסיף מתחת לכותרת משפט קצר שמגדיר את סוג הלקוחות ואת השירות המרכזי." לעולם לא ניסוח כללי כמו "שפרו את הכותרת".
 6. businessSnapshot: סכם בעברית ברורה מה עולה מדף הבית בכל שדה. אם שדה מסוים לא ברור מהתוכן שסופק — החזר null עבורו והוסף את שמו למערך unclear (למשל: "תחום המומחיות", "אזור הפעילות").
+   עבור whereOperating: אם מופיעה כתובת, עיר או אזור — בין אם ב-bodyTextExcerpt ובין אם ב-footerExcerpt — זה מספיק כדי למלא את השדה עם אותו מיקום, גם אם אין הצהרה מפורשת על היקף השירות (מקומי/ארצי/אונליין). אל תחזיר null רק כי חסרה הצהרת היקף כזו — היא לא רלוונטית לעסקים רבים (למשל שירותים דיגיטליים שניתנים מרחוק).
 7. החזר תוצאה עבור כל אחד ואחד מהקריטריונים ברשימה שסופקה, בדיוק לפי המזהים (id) שניתנו — לא פחות ולא יותר.`;
 
 function condenseHomepageForPrompt(snapshot: HomepageSnapshot) {
@@ -63,6 +70,7 @@ function condenseHomepageForPrompt(snapshot: HomepageSnapshot) {
       h3: p.h3.slice(0, 15),
       wordCount: p.wordCount,
       bodyTextExcerpt: p.mainText.slice(0, MAX_PAGE_TEXT_CHARS),
+      footerExcerpt: p.footerText.slice(0, MAX_FOOTER_TEXT_CHARS),
       schemaTypesFound: p.jsonLd.map((b) => (b as Record<string, unknown>)?.["@type"]).filter(Boolean),
     },
     siteMapFoundOnHomepage: Object.fromEntries(

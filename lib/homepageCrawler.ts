@@ -104,6 +104,7 @@ async function fetchAndParseHomepage(url: string, siteHostname: string): Promise
     h3: [],
     bodyText: "",
     mainText: "",
+    footerText: "",
     wordCount: 0,
     paragraphCount: 0,
     internalLinks: [],
@@ -142,11 +143,26 @@ async function fetchAndParseHomepage(url: string, siteHostname: string): Promise
     content.find("script, style, noscript, svg").remove();
     const bodyText = content.text().replace(/\s+/g, " ").trim();
 
-    // mainText additionally drops nav/footer/header — used only for the LLM
-    // prompt, to avoid paying to send repeated boilerplate/menu text.
+    // mainText additionally drops nav — used only for the LLM prompt, to
+    // avoid paying to send repeated menu links. Footer and header are KEPT:
+    // real AI engines reading the page do see them, and footers commonly
+    // carry genuine business info (address, hours, phone) that the LLM
+    // needs to correctly judge fields like "where does the business
+    // operate" — stripping them caused false "unclear" verdicts.
     const mainContent = $.root().clone();
-    mainContent.find("script, style, noscript, svg, nav, footer, header").remove();
+    mainContent.find("script, style, noscript, svg, nav").remove();
     const mainText = mainContent.text().replace(/\s+/g, " ").trim();
+
+    // Kept separately (not just relied on within mainText) so it survives
+    // the LLM prompt's character truncation regardless of how long the rest
+    // of the page is — see freeLlmAnalysis.ts's footerExcerpt.
+    let footerText = "";
+    const footerEl = $("footer").first();
+    if (footerEl.length > 0) {
+      const footerClone = footerEl.clone();
+      footerClone.find("script, style, noscript, svg").remove();
+      footerText = footerClone.text().replace(/\s+/g, " ").trim();
+    }
 
     const paragraphCount = $("p").filter((_, el) => $(el).text().trim().length > 0).length;
 
@@ -196,6 +212,7 @@ async function fetchAndParseHomepage(url: string, siteHostname: string): Promise
       h3: $("h3").map((_, el) => $(el).text().trim()).get().filter(Boolean),
       bodyText,
       mainText,
+      footerText,
       wordCount: bodyText.split(/\s+/).filter(Boolean).length,
       paragraphCount,
       internalLinks,
@@ -324,6 +341,7 @@ function emptyPage(url: string): PageSnapshot {
     h3: [],
     bodyText: "",
     mainText: "",
+    footerText: "",
     wordCount: 0,
     paragraphCount: 0,
     internalLinks: [],
