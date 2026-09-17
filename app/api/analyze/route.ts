@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { buildHomepageSnapshot } from "@/lib/homepageCrawler";
 import { runFreeRuleEngine } from "@/lib/freeRuleEngine";
 import { runFreeLlmAnalysis, FREE_LLM_MODEL } from "@/lib/freeLlmAnalysis";
@@ -70,19 +70,22 @@ export async function POST(req: NextRequest) {
   if (cached) {
     const report = { ...cached, business: { name: businessName, field, region } };
     logCost({ url, model: FREE_LLM_MODEL, usage: null, cached: true });
-    await saveLead({
-      name,
-      email,
-      url,
-      businessName,
-      field,
-      region,
-      score: report.totalScore,
-      createdAt: new Date().toISOString(),
-      cached: true,
-      estimatedCostUsd: 0,
-      marketingConsent,
-    });
+    after(() =>
+      saveLead({
+        name,
+        email,
+        url,
+        businessName,
+        field,
+        region,
+        score: report.totalScore,
+        createdAt: new Date().toISOString(),
+        cached: true,
+        estimatedCostUsd: 0,
+        marketingConsent,
+        report,
+      }),
+    );
     return NextResponse.json({ report });
   }
 
@@ -130,19 +133,22 @@ export async function POST(req: NextRequest) {
   const estimatedCostUsd = logCost({ url, model: FREE_LLM_MODEL, usage, cached: false });
 
   await setCachedReport(url, report);
-  await saveLead({
-    name,
-    email,
-    url,
-    businessName,
-    field,
-    region,
-    score: report.totalScore,
-    createdAt: new Date().toISOString(),
-    cached: false,
-    estimatedCostUsd,
-    marketingConsent,
-  });
+  after(() =>
+    saveLead({
+      name,
+      email,
+      url,
+      businessName,
+      field,
+      region,
+      score: report.totalScore,
+      createdAt: new Date().toISOString(),
+      cached: false,
+      estimatedCostUsd,
+      marketingConsent,
+      report,
+    }),
+  );
 
   return NextResponse.json({ report });
 }
