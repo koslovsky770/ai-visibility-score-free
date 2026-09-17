@@ -94,11 +94,19 @@ export async function checkIpQuota(ip: string): Promise<QuotaResult> {
   return allowed ? { allowed } : { allowed, message: "בוצעו יותר מדי בדיקות מהרשת שלך היום. נסו שוב מחר." };
 }
 
+// "v2" bumps the key namespace so stale entries written under the old 48h
+// TTL (before it was temporarily shortened for testing) are orphaned
+// instead of still being served — changing CACHE_TTL_SECONDS only affects
+// new writes, not ones already sitting in Redis with the old expiry.
+function cacheKey(url: string): string {
+  return `cache:report:v2:${extractDomain(url)}`;
+}
+
 export async function getCachedReport(url: string): Promise<FreeAnalysisReport | null> {
   const client = getRedis();
   if (!client) return null;
   try {
-    return await client.get<FreeAnalysisReport>(`cache:report:${extractDomain(url)}`);
+    return await client.get<FreeAnalysisReport>(cacheKey(url));
   } catch (err) {
     console.error("Failed to read cached report", err);
     return null;
@@ -109,7 +117,7 @@ export async function setCachedReport(url: string, report: FreeAnalysisReport): 
   const client = getRedis();
   if (!client) return;
   try {
-    await client.set(`cache:report:${extractDomain(url)}`, report, { ex: CACHE_TTL_SECONDS });
+    await client.set(cacheKey(url), report, { ex: CACHE_TTL_SECONDS });
   } catch (err) {
     console.error("Failed to write cached report", err);
   }
