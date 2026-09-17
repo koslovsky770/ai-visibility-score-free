@@ -1,16 +1,18 @@
 import { Redis } from "@upstash/redis";
 import type { FreeAnalysisReport } from "./types";
 
-// TEMPORARILY raised (EMAIL/DOMAIN from 2, IP from 5) so Odelya can test
-// freely without self-blocking. Revert all three to their real values once
-// she confirms the app is working correctly end-to-end.
+// TEMPORARILY raised (EMAIL/DOMAIN from 2, IP from 5) and cache TTL
+// shortened (from 48h) so Odelya can test a fix-then-recheck workflow
+// without self-blocking or getting a stale cached result. Revert all four
+// to their real values once she confirms the app is working correctly
+// end-to-end.
 const EMAIL_LIMIT = 50;
 const EMAIL_WINDOW_SECONDS = 30 * 24 * 60 * 60;
 const DOMAIN_LIMIT = 50;
 const DOMAIN_WINDOW_SECONDS = 30 * 24 * 60 * 60;
 const IP_LIMIT = 50;
 const IP_WINDOW_SECONDS = 24 * 60 * 60;
-const CACHE_TTL_SECONDS = 48 * 60 * 60;
+const CACHE_TTL_SECONDS = 60;
 
 export interface QuotaResult {
   allowed: boolean;
