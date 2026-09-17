@@ -113,6 +113,7 @@ export async function runFreeLlmAnalysis(
   const response = await client.messages.parse({
     model: FREE_LLM_MODEL,
     max_tokens: 6000,
+    temperature: 0, // minimize run-to-run score/verdict variance on an unchanged page — no cost impact
     system: SYSTEM_PROMPT,
     messages: [{ role: "user", content: userContent }],
     output_config: {
