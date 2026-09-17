@@ -51,11 +51,11 @@ export default function FullAuditUpsell({
       {/* Part 2+3 — customer-value calculator */}
       <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
         <h3 className="text-center text-xl font-bold text-slate-900">
-          כמה שווה לכם להיות הבחירה של הלקוח הבא?
+          כמה תרוויחו משיפור והתאמת האתר לAI
         </h3>
         <p className="mx-auto mt-3 max-w-xl text-center text-sm leading-relaxed text-slate-600">
-          נראות ב-AI היא לא רק עניין טכני. כשלקוח מחפש ספק או שירות, השאלה היא מי מהעסקים יקבל את
-          ההזדמנות.
+          כדי להבין אם דוח מלא בעלות 149 ₪ משתלם לעסק שלך, הזינו כמה שווה לכם לקוח חדש בממוצע —
+          ונחשב לכם כמה תוכלו להרוויח.
         </p>
 
         <div className="mx-auto mt-6 max-w-xs">
