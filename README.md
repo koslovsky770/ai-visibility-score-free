@@ -8,10 +8,11 @@
 
 1. העתיקו את `.env.local.example` ל-`.env.local` והזינו מפתח מ-[console.anthropic.com](https://console.anthropic.com) בשדה `ANTHROPIC_API_KEY`.
 2. (מומלץ, לא חובה) חברו "Upstash for Redis" ב-Vercel והעתיקו את `UPSTASH_REDIS_REST_URL`/`UPSTASH_REDIS_REST_TOKEN` — בלעדיהם הגבלת השימוש והקאש כבויים (הכל נשאר פתוח).
-3. `npm install`
-4. `npm run dev` ופתחו את [http://localhost:3000](http://localhost:3000)
+3. (אופציונלי) הקימו את הגשר ל-MySQL/מייל לפי `cpanel-api/README.md` והעתיקו את `LEADS_API_URL`/`LEADS_API_KEY` — בלעדיהם לידים רק מודפסים ללוג ולקובץ מקומי, בלי שמירה קבועה או שליחת מייל.
+4. `npm install`
+5. `npm run dev` ופתחו את [http://localhost:3000](http://localhost:3000)
 
-לידים שנאספים בזמן פיתוח מקומי נשמרים גם לקובץ `.leads.local.jsonl` (לא ב-git) — ר' `lib/leads.ts` להחלפה עתידית בחיבור MySQL אמיתי. עלות כל בדיקה נרשמת ללוג עם הקידומת `COST_LOG` — ר' `lib/costLog.ts`.
+לידים שנאספים בזמן פיתוח מקומי נשמרים גם לקובץ `.leads.local.jsonl` (לא ב-git) — ר' `lib/leads.ts`. עלות כל בדיקה נרשמת ללוג עם הקידומת `COST_LOG` — ר' `lib/costLog.ts`.
 
 ## מבנה
 
@@ -23,5 +24,6 @@
 - `lib/freeAggregator.ts` — איחוד הציונים לדוח סופי.
 - `lib/rateLimitAndCache.ts` — הגבלת שימוש (אימייל/דומיין/IP) וקאש תוצאות ב-Redis (Upstash). בלי חיבור Redis — לא פעיל.
 - `lib/costLog.ts` — הערכת עלות בדולרים לכל בדיקה, נרשם ללוג.
-- `lib/leads.ts` — שמירת לידים (placeholder עד לחיבור MySQL).
-- `components/` — רכיבי תצוגת הדוח, כולל `BusinessSnapshot`, `SiteMapSummary`, `LimitsNotice`, `FullAuditCta`.
+- `lib/leads.ts` — שמירת לידים: מדפיס ללוג תמיד, ואם `LEADS_API_URL`/`LEADS_API_KEY` מוגדרים — שולח גם ל-API ב-`cpanel-api/` (MySQL + מייל ללקוח). בלעדיהם, no-op חינני בדיוק כמו Redis.
+- `cpanel-api/` — קוד PHP שרץ מחוץ ל-Vercel, על ה-cPanel — גשר בין Vercel ל-MySQL (כי ל-Vercel אין IP קבוע) ושליחת מייל תוצאות ללקוח. ר' `cpanel-api/README.md` להתקנה.
+- `components/` — רכיבי תצוגת הדוח, כולל `BusinessSnapshot`, `SiteMapSummary`, `FullAuditUpsell`.

@@ -1,0 +1,16 @@
+# Only needed if config.php and vendor/ can't be placed outside
+# public_html (see README.md "Fallback layout"). Save this file's contents
+# as `.htaccess` in the SAME folder as config.php on the server, so a
+# direct request to config.php (or anything else in that folder) is
+# refused instead of served as plain text.
+
+# Apache 2.4+
+<IfModule mod_authz_core.c>
+    Require all denied
+</IfModule>
+
+# Apache 2.2 fallback
+<IfModule !mod_authz_core.c>
+    Order allow,deny
+    Deny from all
+</IfModule>

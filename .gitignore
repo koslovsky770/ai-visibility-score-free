@@ -40,6 +40,10 @@ yarn-error.log*
 # local lead capture (dev only — no DB yet)
 .leads.local.jsonl
 
+# cPanel API secrets/deps — never committed, live only on the server
+cpanel-api/config.php
+cpanel-api/vendor/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
