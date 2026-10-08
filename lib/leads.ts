@@ -128,6 +128,8 @@ async function sendToPlando(lead: StoredLead): Promise<boolean> {
   });
   const originId = process.env.PLANDO_LEAD_ORIGIN_ID;
   if (originId) form.set("contact[lead_origin_cat_id]", originId);
+  const salesPersonId = process.env.PLANDO_SALES_PERSON_ID;
+  if (salesPersonId) form.set("contact[customer_sales_person_id]", salesPersonId);
   const statusId = process.env.PLANDO_LEAD_STATUS_ID;
   if (statusId) form.set("contact[lead_status_cat_id]", statusId);
 
