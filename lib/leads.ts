@@ -148,7 +148,12 @@ async function sendToPlando(lead: StoredLead): Promise<boolean> {
       // fall through — logged below
     }
     if (!res.ok || !data || String(data.err) !== "0") {
-      console.error("Plando lead API failed", res.status, data?.errdesc ?? text.slice(0, 300));
+      console.error(
+        "Plando lead API failed",
+        res.status,
+        res.redirected ? `redirected to ${res.url}` : "",
+        data?.errdesc ?? (text.slice(0, 300) || "(empty body — usually a wrong PLANDO_ACCESS_KEY)"),
+      );
       return false;
     }
     return true;
