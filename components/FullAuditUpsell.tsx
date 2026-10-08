@@ -122,6 +122,8 @@ export default function FullAuditUpsell({
         <h4 className="mt-8 text-lg font-bold text-slate-900">רוצים לראות את התמונה המלאה?</h4>
         <a
           href={FULL_AUDIT_PAYMENT_URL}
+          target="_blank"
+          rel="noopener noreferrer"
           onClick={onCtaClick}
           className="mt-4 inline-block rounded-full bg-[linear-gradient(90deg,#2F67FF_0%,#6D37FF_100%)] px-8 py-3.5 font-bold text-white shadow-[0_9px_22px_rgba(83,76,255,0.25)] transition hover:opacity-95"
         >
