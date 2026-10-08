@@ -37,7 +37,11 @@ export async function saveLead(lead: StoredLead): Promise<void> {
     }
   }
 
-  const results = await Promise.allSettled([sendToGoogleSheets(lead), sendToCpanelApi(lead)]);
+  const results = await Promise.allSettled([
+    sendToGoogleSheets(lead),
+    sendToPlando(lead),
+    sendToCpanelApi(lead),
+  ]);
   const sentAnywhere = results.some((r) => r.status === "fulfilled" && r.value);
   if (!sentAnywhere) {
     console.warn("Lead was not persisted to any destination (none configured, or all failed).");
@@ -89,6 +93,65 @@ async function sendToGoogleSheets(lead: StoredLead): Promise<boolean> {
     // Never let a lead-persistence failure surface to the visitor — they
     // already have a valid report on screen by the time this runs.
     console.error("Failed to call Google Sheets webhook", err);
+    return false;
+  }
+}
+
+/**
+ * Creates (or updates, matched by email) a contact in Plando CRM via its
+ * lead-form API — see integrations/plando/README.md for the parameter list.
+ * PLANDO_LEAD_ORIGIN_ID / PLANDO_LEAD_STATUS_ID are optional numeric
+ * category ids from the Plando account.
+ */
+async function sendToPlando(lead: StoredLead): Promise<boolean> {
+  const accessKey = process.env.PLANDO_ACCESS_KEY;
+  if (!accessKey) return false;
+
+  const report = lead.report;
+  const gaps = report.whatIsMissing.slice(0, 3).map((c) => `- ${c.label}`);
+  const remark = [
+    `בדיקת AI Visibility חינמית`,
+    `אתר: ${report.analyzedUrl}`,
+    `ציון: ${lead.score}/100 (${report.tier.label})`,
+    ...(gaps.length ? ["פערים מרכזיים:", ...gaps] : []),
+  ].join("\n");
+
+  const form = new URLSearchParams({
+    access_key: accessKey,
+    name: lead.name,
+    email: lead.email,
+    update_contact: "1",
+    approve_mailing: lead.marketingConsent ? "1" : "0",
+    tags: "AI Visibility FREE",
+    no_redirect: "1",
+    "contact[remark]": remark,
+  });
+  const originId = process.env.PLANDO_LEAD_ORIGIN_ID;
+  if (originId) form.set("contact[lead_origin_cat_id]", originId);
+  const statusId = process.env.PLANDO_LEAD_STATUS_ID;
+  if (statusId) form.set("contact[lead_status_cat_id]", statusId);
+
+  try {
+    const res = await fetch("https://plando.co.il/contacts/lead_form1", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8" },
+      body: form,
+      signal: AbortSignal.timeout(15_000),
+    });
+    const text = await res.text();
+    let data: { err?: string | number; errdesc?: string } | null = null;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      // fall through — logged below
+    }
+    if (!res.ok || !data || String(data.err) !== "0") {
+      console.error("Plando lead API failed", res.status, data?.errdesc ?? text.slice(0, 300));
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.error("Failed to call Plando lead API", err);
     return false;
   }
 }

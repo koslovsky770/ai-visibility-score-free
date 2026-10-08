@@ -24,6 +24,6 @@
 - `lib/freeAggregator.ts` — איחוד הציונים לדוח סופי.
 - `lib/rateLimitAndCache.ts` — הגבלת שימוש (אימייל/דומיין/IP) וקאש תוצאות ב-Redis (Upstash). בלי חיבור Redis — לא פעיל.
 - `lib/costLog.ts` — הערכת עלות בדולרים לכל בדיקה, נרשם ללוג.
-- `lib/leads.ts` — שמירת לידים: מדפיס ללוג תמיד, ושולח לכל יעד שמוגדר (במקביל, כל יעד נכשל בנפרד): Google Sheets (`GOOGLE_SHEETS_WEBHOOK_*` — ר' `integrations/google-sheets/`) ו/או ה-API ב-`cpanel-api/` (`LEADS_API_*` — MySQL + מייל ללקוח). יעד בלי משתנים — מדולג בשקט.
+- `lib/leads.ts` — שמירת לידים: מדפיס ללוג תמיד, ושולח לכל יעד שמוגדר (במקביל, כל יעד נכשל בנפרד): Google Sheets (`GOOGLE_SHEETS_WEBHOOK_*` — ר' `integrations/google-sheets/`), פלנדו (`PLANDO_ACCESS_KEY` — ר' `integrations/plando/`) ו/או ה-API ב-`cpanel-api/` (`LEADS_API_*` — MySQL + מייל ללקוח). יעד בלי משתנים — מדולג בשקט.
 - `cpanel-api/` — קוד PHP שרץ מחוץ ל-Vercel, על ה-cPanel — גשר בין Vercel ל-MySQL (כי ל-Vercel אין IP קבוע) ושליחת מייל תוצאות ללקוח. ר' `cpanel-api/README.md` להתקנה.
 - `components/` — רכיבי תצוגת הדוח, כולל `BusinessSnapshot`, `SiteMapSummary`, `FullAuditUpsell`.
