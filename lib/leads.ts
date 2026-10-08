@@ -49,6 +49,24 @@ export async function saveLead(lead: StoredLead): Promise<void> {
 }
 
 /**
+ * Coarse score band for CRM segmentation (tags → tailored follow-up emails).
+ * Boundaries follow lib/freeAggregator.ts's tiers: below 60 the homepage has
+ * significant gaps, 60–74 is "room for improvement", 75+ is in good shape.
+ */
+function scoreBand(score: number): "נמוך" | "בינוני" | "גבוה" {
+  if (score < 60) return "נמוך";
+  if (score < 75) return "בינוני";
+  return "גבוה";
+}
+
+/** Top fixes, already sorted by points lost (see freeAggregator.ts). */
+function topFixes(report: FreeAnalysisReport, count: number): string[] {
+  return report.whatIsMissing
+    .slice(0, count)
+    .map((c) => `${c.status === "partial" ? "חלקי" : "חסר"}: ${c.label} — ${c.explanation}`);
+}
+
+/**
  * Appends a row to a Google Sheet via a Google Apps Script web app — see
  * integrations/google-sheets/. Apps Script can't read request headers, so
  * the shared secret travels in the body.
@@ -73,12 +91,10 @@ async function sendToGoogleSheets(lead: StoredLead): Promise<boolean> {
         tierLabel: lead.report.tier.label,
         marketingConsent: lead.marketingConsent ?? false,
         businessWhat: lead.report.businessSnapshot.what ?? "",
-        topGaps: lead.report.whatIsMissing
-          .slice(0, 3)
-          .map((c) => c.label)
-          .join(" | "),
+        topGaps: topFixes(lead.report, 5).join("\n"),
         cached: lead.cached ?? false,
         estimatedCostUsd: lead.estimatedCostUsd ?? 0,
+        scoreBand: scoreBand(lead.score),
       }),
       signal: AbortSignal.timeout(15_000),
     });
@@ -108,12 +124,13 @@ async function sendToPlando(lead: StoredLead): Promise<boolean> {
   if (!accessKey) return false;
 
   const report = lead.report;
-  const gaps = report.whatIsMissing.slice(0, 3).map((c) => `- ${c.label}`);
+  const band = scoreBand(lead.score);
+  const fixes = topFixes(report, 5).map((f, i) => `${i + 1}. ${f}`);
   const remark = [
     `בדיקת AI Visibility חינמית`,
     `אתר: ${report.analyzedUrl}`,
-    `ציון: ${lead.score}/100 (${report.tier.label})`,
-    ...(gaps.length ? ["פערים מרכזיים:", ...gaps] : []),
+    `ציון: ${lead.score}/100 — ציון ${band} (${report.tier.label})`,
+    ...(fixes.length ? ["", "מה צריך לתקן (לפי סדר חשיבות):", ...fixes] : []),
   ].join("\n");
 
   const form = new URLSearchParams({
@@ -122,7 +139,7 @@ async function sendToPlando(lead: StoredLead): Promise<boolean> {
     email: lead.email,
     update_contact: "1",
     approve_mailing: lead.marketingConsent ? "1" : "0",
-    tags: "AI Visibility FREE",
+    tags: `AI Visibility FREE,AI ציון ${band}`,
     no_redirect: "1",
     "contact[remark]": remark,
   });

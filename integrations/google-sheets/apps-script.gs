@@ -18,9 +18,10 @@ const COLUMNS = [
   ["tierLabel", "דירוג"],
   ["marketingConsent", "הסכמה לדיוור"],
   ["businessWhat", "מה העסק עושה (לפי ה-AI)"],
-  ["topGaps", "פערים מרכזיים"],
+  ["topGaps", "מה צריך לתקן"],
   ["cached", "מהקאש"],
   ["estimatedCostUsd", "עלות משוערת ($)"],
+  ["scoreBand", "רמת ציון"],
 ];
 
 function doPost(e) {
