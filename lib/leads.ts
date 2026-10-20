@@ -119,19 +119,64 @@ async function sendToGoogleSheets(lead: StoredLead): Promise<boolean> {
  * PLANDO_LEAD_ORIGIN_ID / PLANDO_LEAD_STATUS_ID are optional numeric
  * category ids from the Plando account.
  */
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+/**
+ * The Plando remark field is dropped into the automation email as-is, so
+ * plain "\n" line breaks collapse into one block of text. Build it as
+ * email-safe HTML instead: inline styles only (email clients strip <style>),
+ * RTL, a numbered list of fixes. Every value is escaped — URLs and AI
+ * explanations are untrusted text.
+ */
+function buildPlandoRemarkHtml(lead: StoredLead, band: string): string {
+  const report = lead.report;
+  const url = escapeHtml(report.analyzedUrl);
+  const bandColor = band === "גבוה" ? "#15803d" : band === "בינוני" ? "#b45309" : "#b91c1c";
+  const fixes = report.whatIsMissing.slice(0, 5);
+
+  const items = fixes
+    .map((c) => {
+      const isPartial = c.status === "partial";
+      const badge = isPartial ? "חלקי" : "חסר";
+      const badgeColor = isPartial ? "#b45309" : "#b91c1c";
+      return (
+        `<li style="margin:0 0 12px 0;">` +
+        `<strong>${escapeHtml(c.label)}</strong> ` +
+        `<span style="color:${badgeColor};font-size:13px;">(${badge})</span><br>` +
+        `<span style="color:#475569;">${escapeHtml(c.explanation)}</span>` +
+        `</li>`
+      );
+    })
+    .join("");
+
+  return (
+    `<div dir="rtl" style="direction:rtl;text-align:right;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.6;color:#1e293b;">` +
+    `<h3 style="margin:0 0 8px 0;font-size:18px;color:#1e293b;">תוצאות בדיקת AI Visibility</h3>` +
+    `<p style="margin:0 0 4px 0;"><strong>האתר שנבדק:</strong> <a href="${url}" style="color:#4f46e5;">${url}</a></p>` +
+    `<p style="margin:0 0 16px 0;"><strong>הציון:</strong> ` +
+    `<span style="font-size:20px;font-weight:bold;color:${bandColor};">${lead.score}/100</span> ` +
+    `— ${escapeHtml(report.tier.label)}</p>` +
+    (fixes.length
+      ? `<h4 style="margin:0 0 8px 0;font-size:16px;color:#1e293b;">מה כדאי לתקן (לפי סדר חשיבות):</h4>` +
+        `<ol style="margin:0;padding-right:20px;padding-left:0;">${items}</ol>`
+      : `<p style="margin:0;">לא נמצאו פערים משמעותיים בדף הבית.</p>`) +
+    `</div>`
+  );
+}
+
 async function sendToPlando(lead: StoredLead): Promise<boolean> {
   const accessKey = process.env.PLANDO_ACCESS_KEY;
   if (!accessKey) return false;
 
-  const report = lead.report;
   const band = scoreBand(lead.score);
-  const fixes = topFixes(report, 5).map((f, i) => `${i + 1}. ${f}`);
-  const remark = [
-    `בדיקת AI Visibility חינמית`,
-    `אתר: ${report.analyzedUrl}`,
-    `ציון: ${lead.score}/100 — ציון ${band} (${report.tier.label})`,
-    ...(fixes.length ? ["", "מה צריך לתקן (לפי סדר חשיבות):", ...fixes] : []),
-  ].join("\n");
+  const remark = buildPlandoRemarkHtml(lead, band);
 
   const form = new URLSearchParams({
     access_key: accessKey,
