@@ -1,9 +1,10 @@
+import { track as vercelTrack } from "@vercel/analytics";
+
 /**
- * Minimal client-side analytics abstraction. No analytics provider is wired
- * up in this project yet, so `track` only logs to the console in
- * development. When a real provider (PostHog, GA4, Vercel Analytics, ...)
- * is chosen, replace the body of this function — call sites elsewhere in
- * the app don't need to change.
+ * Client-side analytics abstraction, backed by Vercel Analytics (page views
+ * come from <Analytics /> in app/layout.tsx; these are the funnel's custom
+ * events). Call sites only use `track`, so swapping providers later means
+ * changing this one file.
  */
 export type AnalyticsEvent =
   | "landing_view"
@@ -18,5 +19,9 @@ export function track(event: AnalyticsEvent, payload?: Record<string, unknown>):
   if (process.env.NODE_ENV !== "production") {
     console.debug("[analytics]", event, payload ?? {});
   }
-  // TODO: send to a real analytics provider once one is chosen.
+  try {
+    vercelTrack(event, payload as Record<string, string | number | boolean | null> | undefined);
+  } catch {
+    // Analytics must never break the app.
+  }
 }

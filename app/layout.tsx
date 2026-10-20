@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Assistant } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 
 const assistant = Assistant({
@@ -19,6 +20,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html dir="rtl" lang="he" className={`${assistant.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col text-slate-900">
         {children}
+        <Analytics />
       </body>
     </html>
   );
