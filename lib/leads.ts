@@ -192,6 +192,8 @@ async function sendToPlando(lead: StoredLead): Promise<boolean> {
   if (originId) form.set("contact[lead_origin_cat_id]", originId);
   const salesPersonId = process.env.PLANDO_SALES_PERSON_ID;
   if (salesPersonId) form.set("contact[customer_sales_person_id]", salesPersonId);
+  // "סטטוס לקוח" in Plando — "0" is "ליד חדש". Overridable from Vercel.
+  form.set("contact[customer_cat_id]", process.env.PLANDO_CUSTOMER_STATUS_ID ?? "0");
   const statusId = process.env.PLANDO_LEAD_STATUS_ID;
   if (statusId) form.set("contact[lead_status_cat_id]", statusId);
 
