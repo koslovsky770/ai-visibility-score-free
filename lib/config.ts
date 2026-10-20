@@ -5,4 +5,4 @@ export const FULL_AUDIT_PRICE_ILS = 149;
 
 // Microsoft Clarity project id (clarity.microsoft.com → Settings → Overview).
 // Empty string disables Clarity entirely.
-export const CLARITY_PROJECT_ID = "";
+export const CLARITY_PROJECT_ID = "z0nzwpo3af";
