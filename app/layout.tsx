@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Assistant } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
+import { Clarity } from "@/components/Clarity";
 import "./globals.css";
 
 const assistant = Assistant({
@@ -21,6 +22,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full flex flex-col text-slate-900">
         {children}
         <Analytics />
+        <Clarity />
       </body>
     </html>
   );

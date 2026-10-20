@@ -24,4 +24,14 @@ export function track(event: AnalyticsEvent, payload?: Record<string, unknown>):
   } catch {
     // Analytics must never break the app.
   }
+  try {
+    // Microsoft Clarity — loaded by components/Clarity.tsx; absent until then.
+    const clarity = (window as unknown as { clarity?: (...args: unknown[]) => void }).clarity;
+    if (clarity) {
+      clarity("event", event);
+      if (payload && typeof payload.score === "number") clarity("set", "score", String(payload.score));
+    }
+  } catch {
+    // ignore
+  }
 }
